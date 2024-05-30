@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8"> 
+    <title>Game Template by Andrew Kane </title>
+    <style></style>
+	   <link rel="shortcut icon" href="favicon.ico" >
+   <link rel="icon" type="image/gif" href="animated_favicon1.gif" >
+</head>
+<body class="myElement" oncontextmenu="return false;">
+<canvas id="gameCanvas" width="1000" height="800"></canvas>
+<script type="text/javascript" src="mouse.js"></script>
+<script type="text/javascript" src="keyboard.js"></script>
+<script type="text/javascript" src="msounds.js"></script>
+<script>
+// declare global variables/////////////////////////////////////////////////
+let allsounds = Msounds();
+var mytime = Date.now();//mytime initiated as milliseconds since 1970 at startup of  game
+var FPS = 60;
+setInterval(update, 1000 / FPS);// set up interval (game loop)
+var canvas, context;
+canvas = document.getElementById("gameCanvas"); //canvas is the draw sauce.
+canvas.style.cursor = "crosshair";
+context = canvas.getContext("2d");
+context.canvas.width  = window.innerWidth-24; //This overrides the 1600x900 established in html.
+context.canvas.height = window.innerHeight-24;
+function openFullscreen() {
+  if (canvas.requestFullscreen) {
+    canvas.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    canvas.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    canvas.msRequestFullscreen();
+  }
+}
+var windowmousexoffset = -8;
+var windowmouseyoffset = -8;
+var fullscreenmousexoffset = -12;
+var fullscreenmouseyoffset = -68;
+var mousestate = 0;
+var mx = 0;//mouse coordinates
+var my = 0;
+var sound = 0.5;//volume
+var time = 0; //Count of frames elapsed in game time.  Used to track in-game time related stuff.
+
+
+//Sample in game object "thingie"
+//game objects will generally need an X position, a Y position, an X velocity, and a Y velocity.
+//Barring special provisions, the X and Y position are measured in pixels from the top left corner of the canvas
+//and the X and Y velocity are measured in pixels per frame.
+//Negative velocity values cause movement in the opposite direction as positive values
+//Decimal velocity values are allowed, and they will cause movement to be slower than 1 pixel per frame,
+//so movement may not be visible on every frame.
+//Negative position values and position values greater than canvas.width or canvas.height are off the screen.
+//However, js will still draw any part of any graphics object that falls within the canvas.
+//For example, a circle with a center at x = 200 and y = -40 will be partly visible if it's radius is larger than 40.
+
+var thingiex = 300;
+var thingiey = 300;
+var thingier = 32;
+var thingievx = 1;
+var thingievy = -0.5;
+var otherthingx = 400;
+var otherthingy = 400;
+var otherthingr = 55;
+var otherthingvx = 0.5
+var otherthingvy = 2.25
+
+//GAMELOOP/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function update() {
+	var truetime = Date.now();//Actual time, milliseconds since 1970
+  	var servertime = mytime+Math.floor(time*1000/FPS); //This would be equal to truetime if setInterval worked correctly
+  	if (servertime<truetime){//Only runs game loop when if it's not too early for the next frame
+	time++;//Number of frames elapsed since game start
+	context.fillStyle = "black";
+	context.fillRect(0, 0, canvas.width, canvas.height); //This is the black background
+
+	///////////////////////////////////
+	//Some sample graphics commands
+	//////////////////////////////////////
+
+	//Lines////////////////////////////////////////////
+	//Set line color and thickness
+	context.strokeStyle = "green";//sets the color to be used for lines
+	context.lineWidth = 4;//Sets width of lines or curves to be drawn
+	//draw lines
+	context.beginPath();//begins a sequence of lines or curves
+	context.moveTo(50,100);//numbers are X and Y coordinates
+	context.lineTo(75,200);
+	//you can use another lineTo() to add a line connected to the end of the first,
+	//or you can use another moveTo() to start a new line, and finish it with one or more lineTo()
+	context.stroke();//This will now draw the line(s) defined between here and beginPath()
+
+	//Circles & arcs ///////////////////////////////////
+	//Change line color and thickness
+	context.strokeStyle = "yellow";//sets the color to be used for lines
+	context.lineWidth = 8;//Sets width of lines or curves to be drawn
+	context.beginPath();
+	context.arc(300, 400, 150, 0, 2 * Math.PI, false);
+	//the first two numbers (300 and 400) are the X and Y coordinates of the CENTER of the circle.
+	//The 2nd two numbers are the angular start and end of the arc.  For a full circle, always 0 and 2*pi.
+	//If you want to do a partial circle or arc, start at more than 0 and/or end at less than 2*pi.
+	context.stroke();
+
+	//Rectangles (outline only)/////////////////////////////////
+	//Change line color and thickness
+	context.strokeStyle = "orange";//sets the color to be used for lines
+	context.lineWidth = 6;//Sets width of lines or curves to be drawn
+	context.beginPath();
+	context.rect(400, 150, 160, 100);
+	//the first two numbers (300 and 400) are the X and Y coordinates of the TOP LEFT CORNER.
+	//The 2nd two numbers are the X and Y size of the rectangle (width, length).
+	context.stroke();
+
+	//Filled rectangles////////////////////////////////
+	//Change fill color
+	context.fillStyle = "red";//sets the color to be used for fill
+	context.fillRect(580, 150, 160, 100);
+	//the first two numbers (300 and 400) are the X and Y coordinates of the TOP LEFT CORNER.
+	//The 2nd two numbers are the X and Y size of the rectangle (width, length).
+
+	//Filled circles
+	context.beginPath();
+	context.fillStyle = "purple";//sets the color to be used for fill
+	context.arc(50,50, 32, 0, 2 * Math.PI, false); //Same as for circle outline
+	context.lineWidth = 1; //Wide lines will affect final circle size
+	context.fill();	//ok now actually FILL it.
+
+	//Filled polygon
+	context.beginPath();
+	context.fillStyle = "blue";//sets the color to be used for fill
+	context.beginPath();//begins a sequence of lines or curves
+	context.moveTo(100,150);//numbers are X and Y coordinates
+	context.lineTo(150,200);//Each line segment defines a side of the polygon
+	context.lineTo(120,220);//each line segment is defined by two points in this sequence.
+	context.lineTo(80,220);//Any number of segments may be used to define a polygon of any complexity.
+	//If the last point in the sequence is NOT equal to the last, js will automagically close the polygon with a final line
+	context.lineWidth = 1; //Wide lines will affect polygon size
+	context.fill();	//ok now actually FILL it.
+
+	//Text as graphics
+	//There are many easier ways to get text in an HTML document, but sometimes you want to do it within
+	//the HTML canvas.  For example, if you wanted to label an object that would move around the canvas,
+	//or you wanted the text to be in front of some canvas objects but behind others....
+	context.fillStyle = "lime";//The fillstyle controls text color
+	context.font = "30px Ariel";//This is the font and font size.  Changing the number in front of "px" changes the size,
+	//the other word denotes the font style.
+	context.fillText("In-game text thing",180,200);//First parameter is a string, second and third are X and Y coordinates.
+
+	/////////////////////////////////////////////////////////////////
+	//sample movement game logic///////////////////////////////////////
+	///////////////////////////////////////////////////////////////
+
+	//some things have to be set up outside the loop, see... the stuff before "function update(){"
+
+	//Update the X and Y position by adding the x and y velocities.
+	thingiex = thingiex + thingievx;
+	thingiey = thingiey + thingievy;
+	//this needs to happen for each moving object
+	otherthingx = otherthingx + otherthingvx;
+	otherthingy = otherthingy + otherthingvy;
+
+	//Bounce off horizontal and vertical surfaces
+	//In this case, we will bounce off the edges of the screen.
+	//The left edge is where x==0, and the right edge is where x == canvas.width;
+	//the top edge is where y==0, and the bottom edge is where y == canvas.height;
+	//For bouncing off a vertical surface, all we need to do is reverse the X velocity on collision
+	//In this simple case, collision with the vertical edges of the screen occurs
+	//whenever X < 0 or whenever x > canvas.width
+	if (thingiex<0){
+		thingiex = 1;//Put thingie on the edge, not necessarily required but it prevents odd cases where
+		//thingie might get trapped out of bounds
+		thingievx = -1* thingievx; //reverse the X velocity by multiplying by negative 1
+		}
+	else if (thingiex>canvas.width){
+		thingiex = canvas.width-1;//Put thingie on the edge, not necessarily required but it prevents odd cases where
+		//thingie might get trapped out of bounds
+		thingievx = -1* thingievx; //reverse the X velocity by multiplying by negative 1
+		}
+	//Horizontal edges are the same, just applied to the Y axis....
+	if (thingiey<0){
+		thingiey = 1;//Put thingie on the edge, not necessarily required but it prevents odd cases where
+		//thingie might get trapped out of bounds
+		thingievy = -1* thingievy; //reverse the X velocity by multiplying by negative 1
+		}
+	else if (thingiey>canvas.height){
+		thingiey = canvas.height-1;//Put thingie on the edge, not necessarily required but it prevents odd cases where
+		//thingie might get trapped out of bounds
+		thingievy = -1* thingievy; //reverse the y velocity by multiplying by negative 1
+		}
+
+	//Improved bouncing
+	//Above algorithm treats thingie as having 0 size.
+	//But we can account for the size of a square or circle by adjusting the boundaries.
+	//Instead of 0 being minimum, and canvas.width (and height) being maximum,
+	//treat the radius (or half-width) as being minimum, and canvas.width minus the radius as maximum
+	if (otherthingx<otherthingr){
+		otherthingx = otherthingr+1;
+		otherthingvx = otherthingvx * -1;
+		}
+	else if (otherthingx>canvas.width-otherthingr){
+		otherthingx = canvas.width-otherthingr - 1;
+		otherthingvx = otherthingvx*-1;
+		}
+	if (otherthingy<otherthingr){
+		otherthingy = otherthingr+1;
+		otherthingvy = otherthingvy * -1;
+		}
+	else if (otherthingy>canvas.height-otherthingr){
+		otherthingy = canvas.height-otherthingr - 1;
+		otherthingvy = otherthingvy*-1;
+		}
+
+	//now lets draw the thingie as a brown circle....
+	context.beginPath();
+	context.fillStyle = "brown";//sets the color to be used for fill
+	context.arc(thingiex,thingiey, thingier, 0, 2 * Math.PI, false);
+	context.fill();	//ok now actually FILL it.
+
+	//and otherthing as a tan circle....
+	context.beginPath();
+	context.fillStyle = "tan";//sets the color to be used for fill
+	context.arc(otherthingx,otherthingy, otherthingr, 0, 2 * Math.PI, false);
+	context.fill();	//ok now actually FILL it.
+
+
+	if(time%2==0){
+		var truetime = Date.now();
+		var servertime = mytime+Math.floor(time*1000/FPS);
+		if (time%(FPS*2)==0){console.log("True time: "+truetime+"Server time: "+servertime+" dt: "+(truetime-servertime));}
+		var lagging = truetime-(servertime+1000/FPS);//this is how far behind the server is from the nominal framerate
+		if (lagging>1000){
+			//console.log("Lagging too far, not correcting "+(truetime-servertime)+" ms");
+			}
+		else if (lagging>0){//If the server is behind, run the game 1 extra frame to catch up.
+			update();
+			//console.log("Running extra frame because server is behind "+(truetime-servertime)+" ms");
+			}
+		}
+	}else{
+		//console.log("Extra loop skipped because server is ahead "+(servertime-truetime)+"ms");
+		}
+	}
+</script>
+</body>
+</html>
